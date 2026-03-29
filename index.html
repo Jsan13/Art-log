@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ART LOG">
+<meta name="theme-color" content="#181512">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>ART LOG — 鑑賞記録</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400&family=DM+Mono:wght@300;400&display=swap');
+
+:root {
+  --ink: #181512;
+  --paper: #f2ede3;
+  --paper2: #ece5d7;
+  --warm: #c5b49a;
+  --accent: #7a3020;
+  --accent2: #b85c40;
+  --muted: #7a7060;
+  --line: rgba(24,21,18,0.1);
+  --line2: rgba(24,21,18,0.06);
+  --visited: #2d5a3d;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 300;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 2rem 2.5rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  line-height: 1;
+}
+.logo sub {
+  display: block;
+  font-size: 0.55rem;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.35em;
+  color: var(--muted);
+  margin-top: 0.4rem;
+  font-style: normal;
+  vertical-align: baseline;
+}
+
+nav { display: flex; gap: 0; }
+
+.nav-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.5rem 1.2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-btn:hover { color: var(--ink); }
+.nav-btn.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+/* ── VIEWS ── */
+.view { display: none; padding: 2rem 2.5rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+.view.active { display: block; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.8rem;
+  flex-wrap: wrap;
+}
+
+.search-wrap { flex: 1; min-width: 180px; position: relative; }
+.search-wrap input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  padding: 0.4rem 0;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 0.82rem;
+  color: var(--ink);
+  outline: none;
+}
+.search-wrap input::placeholder { color: var(--warm); }
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.5rem 1.3rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-primary:hover { background: var(--accent); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--warm);
+  padding: 0.45rem 1rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ── VENUE LIST ── */
+.venue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.venue-card {
+  background: var(--paper);
+  padding: 1.4rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.venue-card:hover { background: var(--paper2); }
+
+.venue-card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
+}
+.venue-card-loc {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 0.8rem;
+}
+.venue-card-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--warm);
+  letter-spacing: 0.1em;
+  display: flex;
+  gap: 1rem;
+}
+.venue-card-actions {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.venue-card:hover .venue-card-actions { opacity: 1; }
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--muted);
+  padding: 0.2rem 0.3rem;
+  transition: color 0.2s;
+}
+.icon-btn:hover { color: var(--accent); }
+
+/* ── EXHIBITION LIST ── */
+.exh-list { display: flex; flex-direction: column; }
+
+.exh-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 1.5rem;
+  padding: 1.3rem 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 0.12s;
+  align-items: start;
+  position: relative;
+}
+.exh-row:hover { background: rgba(197,180,154,0.08); }
+
+.exh-dates {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  line-height: 1.8;
+  padding-top: 0.2rem;
+}
+.exh-dates .badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  margin-top: 0.4rem;
+}
+.badge-visited { background: var(--visited); color: #fff; }
+.badge-planned { background: var(--warm); color: var(--ink); }
+.badge-ongoing { background: var(--accent2); color: #fff; }
+
+.exh-main { }
+.exh-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+.exh-venue-name {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.06em;
+}
+.exh-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.exh-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--accent2); letter-spacing: 0.08em; }
+
+.exh-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.exh-rating {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+.exh-actions { display: flex; gap: 0.3rem; opacity: 0; transition: opacity 0.2s; }
+.exh-row:hover .exh-actions { opacity: 1; }
+
+/* ── DETAIL VIEW ── */
+.detail-header {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.detail-back {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: color 0.2s;
+}
+.detail-back:hover { color: var(--ink); }
+
+.detail-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+.detail-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+.detail-meta-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.detail-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.detail-meta-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--warm);
+  letter-spacing: 0.2em;
+}
+.detail-meta-val {
+  font-size: 0.82rem;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.detail-meta-val a {
+  color: var(--accent2);
+  text-decoration: none;
+}
+.detail-meta-val a:hover { text-decoration: underline; }
+
+.detail-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2.5rem;
+}
+@media (max-width: 700px) {
+  .detail-body { grid-template-columns: 1fr; }
+  .exh-row { grid-template-columns: 90px 1fr; }
+}
+
+.section-heading {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  color: var(--warm);
+  margin-bottom: 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.desc-text {
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+/* Visit log in detail */
+.visit-card {
+  background: var(--paper2);
+  padding: 1.2rem;
+  margin-bottom: 1px;
+  position: relative;
+}
+.visit-card-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+.visit-card-rating { color: var(--accent); font-size: 0.75rem; margin-bottom: 0.5rem; }
+.visit-card-note {
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: var(--ink);
+  font-style: italic;
+  white-space: pre-wrap;
+}
+.visit-card-actions {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.visit-card:hover .visit-card-actions { opacity: 1; }
+
+.add-visit-btn {
+  background: transparent;
+  border: 1px dashed var(--warm);
+  width: 100%;
+  padding: 0.8rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+.add-visit-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+/* Sub-exhibitions in venue detail */
+.sub-exh-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--line2);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.sub-exh-row:hover { background: rgba(197,180,154,0.1); }
+.sub-exh-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 300;
+}
+.sub-exh-period {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--muted);
+}
+.empty-state .glyph {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4rem;
+  opacity: 0.15;
+  margin-bottom: 1rem;
+}
+.empty-state p { font-size: 0.78rem; letter-spacing: 0.12em; }
+
+/* ── MODAL ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(24,21,18,0.65);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--paper);
+  width: 100%;
+  max-width: 580px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 2.2rem;
+  position: relative;
+  animation: fadeUp 0.22s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.8rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--ink); }
+
+.form-field { margin-bottom: 1.3rem; }
+.form-field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+}
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--warm);
+  padding: 0.35rem 0;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 0.85rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus { border-color: var(--ink); }
+.form-field textarea { resize: vertical; min-height: 80px; line-height: 1.75; }
+.form-field select { cursor: pointer; -webkit-appearance: none; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.stars-row { display: flex; gap: 0.4rem; }
+.star {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--warm);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+.star.on { color: var(--accent); }
+
+.tags-field {
+  border-bottom: 1px solid var(--warm);
+  padding: 0.3rem 0 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  cursor: text;
+}
+.tags-field:focus-within { border-color: var(--ink); }
+.tags-field input {
+  border: none !important;
+  padding: 0 !important;
+  min-width: 100px;
+  flex: 1;
+}
+.chip {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  padding: 0.15rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  letter-spacing: 0.04em;
+}
+.chip button {
+  background: none;
+  border: none;
+  color: var(--warm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-top: 1.8rem;
+}
+
+/* fetch btn */
+.fetch-row { display: flex; gap: 0.5rem; align-items: flex-end; }
+.fetch-row .form-field { flex: 1; margin-bottom: 0; }
+.fetch-btn {
+  background: var(--paper2);
+  border: 1px solid var(--warm);
+  padding: 0.35rem 0.8rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  height: 30px;
+  align-self: flex-end;
+  margin-bottom: 1.3rem;
+}
+.fetch-btn:hover { border-color: var(--ink); color: var(--ink); }
+/* ── MOBILE / PWA ── */
+@media (max-width: 600px) {
+  header { padding: 1.2rem 1.2rem 0.8rem; }
+  .logo { font-size: 1.5rem; }
+  .nav-btn { padding: 0.5rem 0.8rem; font-size: 0.6rem; }
+  .view { padding: 1rem 1rem; }
+  .toolbar { gap: 0.6rem; }
+  .btn-primary { padding: 0.5rem 0.9rem; font-size: 0.6rem; }
+  .exh-row { grid-template-columns: 70px 1fr; gap: 0.8rem; }
+  .exh-right { display: none; }
+  .venue-grid { grid-template-columns: 1fr; }
+  .detail-body { grid-template-columns: 1fr; }
+  .detail-title { font-size: 1.6rem; }
+  .modal { padding: 1.5rem; }
+  .form-row { grid-template-columns: 1fr; }
+  header, .view { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+}
+
+/* data toolbar */
+.data-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 2.5rem;
+  border-bottom: 1px solid var(--line2);
+  background: var(--paper2);
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .data-bar { padding: 0.5rem 1rem; }
+}
+.data-bar-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--warm);
+  letter-spacing: 0.15em;
+  margin-right: 0.3rem;
+}
+.data-btn {
+  background: none;
+  border: 1px solid var(--warm);
+  padding: 0.25rem 0.7rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.data-btn:hover { border-color: var(--ink); color: var(--ink); }
+.data-btn.danger:hover { border-color: var(--accent); color: var(--accent); }
+.install-btn {
+  margin-left: auto;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.3rem 0.9rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  display: none;
+}
+
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">
+    ART LOG
+    <sub>鑑賞記録 / EXHIBITION DIARY</sub>
+  </div>
+  <nav>
+    <button class="nav-btn active" data-view="exhibitions">EXHIBITIONS</button>
+    <button class="nav-btn" data-view="venues">VENUES</button>
+  </nav>
+</header>
+
+<div class="data-bar">
+  <span class="data-bar-label">DATA</span>
+  <button class="data-btn" id="exportBtn">⬇ エクスポート</button>
+  <label class="data-btn" style="cursor:pointer">⬆ インポート<input type="file" id="importFile" accept=".json" style="display:none"></label>
+  <button class="data-btn danger" id="clearBtn">🗑 全削除</button>
+  <button class="install-btn" id="installBtn">＋ ホーム画面に追加</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     EXHIBITIONS VIEW
+══════════════════════════════════════ -->
+<div id="view-exhibitions" class="view active">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="exhSearch" placeholder="タイトル、会場、タグで検索…">
+    </div>
+    <select id="exhVenueFilter" style="background:transparent;border:none;border-bottom:1px solid var(--warm);font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);padding:0.4rem 0;outline:none;cursor:pointer;min-width:120px;">
+      <option value="">すべての会場</option>
+    </select>
+    <select id="exhStatusFilter" style="background:transparent;border:none;border-bottom:1px solid var(--warm);font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);padding:0.4rem 0;outline:none;cursor:pointer;">
+      <option value="">すべて</option>
+      <option value="visited">訪問済み</option>
+      <option value="planned">予定</option>
+    </select>
+    <button class="btn-primary" id="openAddExhBtn">＋ 展覧会を追加</button>
+  </div>
+  <div class="exh-list" id="exhList"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VENUES VIEW
+══════════════════════════════════════ -->
+<div id="view-venues" class="view">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="venueSearch" placeholder="会場名、所在地で検索…">
+    </div>
+    <button class="btn-primary" id="openAddVenueBtn">＋ 会場を追加</button>
+  </div>
+  <div class="venue-grid" id="venueGrid"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VENUE DETAIL VIEW
+══════════════════════════════════════ -->
+<div id="view-venue-detail" class="view">
+  <div class="detail-header">
+    <button class="detail-back" id="venueDetailBack">← VENUES</button>
+    <div class="detail-title" id="vdName"></div>
+    <div class="detail-sub" id="vdLocation"></div>
+    <div class="detail-meta-row">
+      <div class="detail-meta-item">
+        <span class="detail-meta-label">URL</span>
+        <span class="detail-meta-val" id="vdUrl"></span>
+      </div>
+      <div class="detail-meta-item">
+        <span class="detail-meta-label">メモ</span>
+        <span class="detail-meta-val" id="vdNote"></span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="section-heading">この会場の展覧会</div>
+    <div id="vdExhList"></div>
+    <button class="btn-secondary" id="vdAddExhBtn" style="margin-top:1rem">＋ この会場に展覧会を追加</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     EXHIBITION DETAIL VIEW
+══════════════════════════════════════ -->
+<div id="view-exh-detail" class="view">
+  <div class="detail-header">
+    <button class="detail-back" id="exhDetailBack">← EXHIBITIONS</button>
+    <div class="detail-title" id="edTitle"></div>
+    <div class="detail-sub" id="edVenueName"></div>
+    <div class="detail-meta-row" id="edMetaRow"></div>
+  </div>
+  <div class="detail-body">
+    <div>
+      <div class="section-heading">公式情報 / OFFICIAL INFO</div>
+      <div class="desc-text" id="edDesc" style="margin-bottom:2rem"></div>
+      <div class="section-heading" style="margin-top:2rem">鑑賞メモ / MY NOTES</div>
+      <div id="edNoteText" style="font-style:italic;font-size:0.85rem;line-height:1.9;color:var(--muted);white-space:pre-wrap;margin-bottom:1rem"></div>
+      <button class="btn-secondary" id="edEditBtn">この展覧会を編集</button>
+    </div>
+    <div>
+      <div class="section-heading">訪問記録 / VISITS</div>
+      <div id="edVisitList"></div>
+      <button class="add-visit-btn" id="edAddVisitBtn">＋ 訪問を記録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODALS
+══════════════════════════════════════ -->
+
+<!-- Venue Modal -->
+<div class="overlay" id="venueOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('venueOverlay')">✕</button>
+    <div class="modal-heading" id="vModalTitle">会場を追加</div>
+    <div class="fetch-row">
+      <div class="form-field">
+        <label>会場名 *</label>
+        <input type="text" id="vfName" placeholder="東京都現代美術館">
+      </div>
+      <button class="fetch-btn" id="venueSearchBtn">情報を取得</button>
+    </div>
+    <div class="fetch-status" id="vfFetchStatus"></div>
+    <div class="form-field">
+      <label>所在地</label>
+      <input type="text" id="vfLocation" placeholder="東京都江東区三好4-1-1">
+    </div>
+    <div class="form-field">
+      <label>公式URL</label>
+      <input type="url" id="vfUrl" placeholder="https://...">
+    </div>
+    <div class="form-field">
+      <label>メモ（開館時間・休館日など）</label>
+      <textarea id="vfNote" placeholder="火〜日 10:00–18:00、月曜休館など"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('venueOverlay')">キャンセル</button>
+      <button class="btn-primary" id="vSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exhibition Modal -->
+<div class="overlay" id="exhOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('exhOverlay')">✕</button>
+    <div class="modal-heading" id="eModalTitle">展覧会を追加</div>
+
+    <div class="fetch-row">
+      <div class="form-field">
+        <label>公式URL</label>
+        <input type="url" id="efUrl" placeholder="https://...">
+      </div>
+      <button class="fetch-btn" id="fetchInfoBtn">情報を取得</button>
+    </div>
+    <div class="fetch-status" id="fetchStatus"></div>
+
+    <div class="form-field">
+      <label>展覧会名 *</label>
+      <input type="text" id="efTitle" placeholder="展覧会タイトル">
+    </div>
+    <div class="form-field">
+      <label>会場 *</label>
+      <select id="efVenue">
+        <option value="">会場を選択…</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>開始日</label>
+        <input type="date" id="efStart">
+      </div>
+      <div class="form-field">
+        <label>終了日</label>
+        <input type="date" id="efEnd">
+      </div>
+    </div>
+    <div class="form-field">
+      <label>公式概要（自動取得 or 手入力）</label>
+      <textarea id="efDesc" placeholder="展覧会の公式説明文…" style="min-height:100px"></textarea>
+    </div>
+    <div class="form-field">
+      <label>タグ（Enterで追加）</label>
+      <div class="tags-field" id="efTagsField">
+        <input type="text" id="efTagInput" placeholder="現代美術、写真…">
+      </div>
+    </div>
+    <div class="form-field">
+      <label>一般チケット料金（円）</label>
+      <input type="number" id="efTicket" placeholder="900">
+    </div>
+    <div class="form-field">
+      <label>自分のメモ（概要・感想など）</label>
+      <textarea id="efNote" placeholder="気になったポイント、訪問前のメモなど…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('exhOverlay')">キャンセル</button>
+      <button class="btn-primary" id="eSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Visit Modal -->
+<div class="overlay" id="visitOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('visitOverlay')">✕</button>
+    <div class="modal-heading" id="vvModalTitle">訪問を記録</div>
+    <div class="form-field">
+      <label>訪問日 *</label>
+      <input type="date" id="vvDate">
+    </div>
+    <div class="form-field">
+      <label>評価</label>
+      <div class="stars-row" id="vvStarsRow">
+        <button class="star" data-v="1">★</button>
+        <button class="star" data-v="2">★</button>
+        <button class="star" data-v="3">★</button>
+        <button class="star" data-v="4">★</button>
+        <button class="star" data-v="5">★</button>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>感想・メモ</label>
+      <textarea id="vvNote" placeholder="作品の印象、気づき、心に残ったこと…" style="min-height:120px"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('visitOverlay')">キャンセル</button>
+      <button class="btn-primary" id="vvSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+const SK = { venues: 'artlog_v2_venues', exhs: 'artlog_v2_exhs', visits: 'artlog_v2_visits' };
+let venues = [], exhs = [], visits = [];
+let editingVenueId = null, editingExhId = null, editingVisitId = null;
+let currentVenueId = null, currentExhId = null;
+let visitRating = 0;
+let exhTags = [];
+
+function load() {
+  try { venues = JSON.parse(localStorage.getItem(SK.venues)) || []; } catch { venues = []; }
+  try { exhs   = JSON.parse(localStorage.getItem(SK.exhs))   || []; } catch { exhs = []; }
+  try { visits = JSON.parse(localStorage.getItem(SK.visits)) || []; } catch { visits = []; }
+}
+function persist() {
+  localStorage.setItem(SK.venues, JSON.stringify(venues));
+  localStorage.setItem(SK.exhs,   JSON.stringify(exhs));
+  localStorage.setItem(SK.visits, JSON.stringify(visits));
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+const VIEWS = ['exhibitions','venues','venue-detail','exh-detail'];
+
+function showView(name) {
+  VIEWS.forEach(v => {
+    document.getElementById(`view-${v}`).classList.toggle('active', v === name);
+  });
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === name);
+  });
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    showView(btn.dataset.view);
+    if (btn.dataset.view === 'exhibitions') renderExhList();
+    if (btn.dataset.view === 'venues') renderVenueGrid();
+  });
+});
+
+// ════════════════════════════════════════
+// VENUE GRID
+// ════════════════════════════════════════
+function renderVenueGrid() {
+  const q = (document.getElementById('venueSearch').value || '').toLowerCase();
+  const grid = document.getElementById('venueGrid');
+  grid.innerHTML = '';
+
+  let filtered = venues.filter(v =>
+    !q || v.name.toLowerCase().includes(q) || (v.location||'').toLowerCase().includes(q)
+  );
+
+  if (!filtered.length) {
+    grid.style.background = 'none';
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="glyph">○</div><p>会場がまだありません</p></div>`;
+    return;
+  }
+  grid.style.background = 'var(--line)';
+
+  filtered.forEach(v => {
+    const exhCount = exhs.filter(e => e.venueId === v.id).length;
+    const visitCount = visits.filter(vi => {
+      const e = exhs.find(e => e.id === vi.exhId);
+      return e && e.venueId === v.id;
+    }).length;
+    const card = document.createElement('div');
+    card.className = 'venue-card';
+    card.innerHTML = `
+      <div class="venue-card-actions">
+        <button class="icon-btn" data-vid="${v.id}" data-a="edit">編集</button>
+        <button class="icon-btn" data-vid="${v.id}" data-a="del">削除</button>
+      </div>
+      <div class="venue-card-name">${esc(v.name)}</div>
+      <div class="venue-card-loc">${esc(v.location||'')}</div>
+      <div class="venue-card-meta">
+        <span>${exhCount} 展覧会</span>
+        <span>${visitCount} 訪問</span>
+      </div>
+    `;
+    card.addEventListener('click', e => {
+      if (e.target.closest('[data-a]')) return;
+      openVenueDetail(v.id);
+    });
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('[data-a]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (btn.dataset.a === 'edit') openVenueModal(btn.dataset.vid);
+      if (btn.dataset.a === 'del') deleteVenue(btn.dataset.vid);
+    });
+  });
+}
+
+document.getElementById('venueSearch').addEventListener('input', renderVenueGrid);
+
+// ════════════════════════════════════════
+// VENUE DETAIL
+// ════════════════════════════════════════
+function openVenueDetail(id) {
+  currentVenueId = id;
+  const v = venues.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById('vdName').textContent = v.name;
+  document.getElementById('vdLocation').textContent = v.location || '';
+  document.getElementById('vdUrl').innerHTML = v.url ? `<a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.url)}</a>` : '—';
+  document.getElementById('vdNote').textContent = v.note || '—';
+  renderVenueExhList(id);
+  showView('venue-detail');
+}
+
+function renderVenueExhList(venueId) {
+  const list = document.getElementById('vdExhList');
+  const venueExhs = exhs.filter(e => e.venueId === venueId).sort((a,b) => (b.start||'').localeCompare(a.start||''));
+  if (!venueExhs.length) {
+    list.innerHTML = '<p style="font-size:0.78rem;color:var(--muted);padding:1rem 0">まだ展覧会がありません</p>';
+    return;
+  }
+  list.innerHTML = venueExhs.map(e => {
+    const hasVisit = visits.some(v => v.exhId === e.id);
+    const period = [e.start, e.end].filter(Boolean).join(' — ');
+    return `<div class="sub-exh-row" data-eid="${e.id}">
+      <div>
+        <div class="sub-exh-title">${esc(e.title)}</div>
+        <div class="sub-exh-period">${esc(period)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.8rem">
+        ${hasVisit ? '<span style="font-family:\'DM Mono\',monospace;font-size:0.58rem;background:var(--visited);color:#fff;padding:0.1rem 0.5rem;letter-spacing:0.08em">訪問済</span>' : ''}
+        <span style="font-family:\'DM Mono\',monospace;font-size:0.65rem;color:var(--muted)">›</span>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-eid]').forEach(row => {
+    row.addEventListener('click', () => openExhDetail(row.dataset.eid));
+  });
+}
+
+document.getElementById('venueDetailBack').addEventListener('click', () => {
+  showView('venues');
+  renderVenueGrid();
+});
+
+document.getElementById('vdAddExhBtn').addEventListener('click', () => {
+  openExhModal(null, currentVenueId);
+});
+
+// ════════════════════════════════════════
+// EXHIBITION LIST
+// ════════════════════════════════════════
+function statusOf(e) {
+  const today = new Date().toISOString().split('T')[0];
+  const hasVisit = visits.some(v => v.exhId === e.id);
+  if (hasVisit) return 'visited';
+  if (e.end && e.end < today) return 'ended';
+  if (e.start && e.start <= today && (!e.end || e.end >= today)) return 'ongoing';
+  return 'planned';
+}
+
+function renderExhList() {
+  const q = (document.getElementById('exhSearch').value || '').toLowerCase();
+  const venueF = document.getElementById('exhVenueFilter').value;
+  const statusF = document.getElementById('exhStatusFilter').value;
+
+  let filtered = exhs.filter(e => {
+    const venue = venues.find(v => v.id === e.venueId);
+    const matchQ = !q || e.title.toLowerCase().includes(q) ||
+      (venue?.name||'').toLowerCase().includes(q) ||
+      (e.tags||[]).some(t => t.toLowerCase().includes(q));
+    const matchV = !venueF || e.venueId === venueF;
+    const st = statusOf(e);
+    const matchS = !statusF || (statusF === 'visited' && st === 'visited') || (statusF === 'planned' && st !== 'visited');
+    return matchQ && matchV && matchS;
+  }).sort((a, b) => (b.start||'').localeCompare(a.start||''));
+
+  const list = document.getElementById('exhList');
+  list.innerHTML = '';
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><div class="glyph">◇</div><p>展覧会がまだありません</p></div>`;
+    return;
+  }
+
+  filtered.forEach(e => {
+    const venue = venues.find(v => v.id === e.venueId);
+    const st = statusOf(e);
+    const bestVisit = visits.filter(v => v.exhId === e.id && v.rating).sort((a,b) => b.rating - a.rating)[0];
+    const period = [fmtDate(e.start), fmtDate(e.end)].filter(Boolean).join(' — ');
+    const badgeMap = { visited:'badge-visited', planned:'badge-planned', ongoing:'badge-ongoing', ended:'' };
+    const labelMap = { visited:'訪問済', planned:'予定', ongoing:'開催中', ended:'終了' };
+    const tagsHtml = (e.tags||[]).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+
+    const row = document.createElement('div');
+    row.className = 'exh-row';
+    row.innerHTML = `
+      <div class="exh-dates">
+        ${e.start ? e.start.slice(0,7).replace('-','/') : ''}
+        ${e.end   ? '<br>→ ' + e.end.slice(0,7).replace('-','/') : ''}
+        ${st ? `<div><span class="badge ${badgeMap[st]||''}">${labelMap[st]}</span></div>` : ''}
+      </div>
+      <div class="exh-main">
+        <div class="exh-title">${esc(e.title)}</div>
+        ${venue ? `<div class="exh-venue-name">${esc(venue.name)}</div>` : ''}
+        ${e.desc ? `<div class="exh-desc">${esc(e.desc)}</div>` : ''}
+        ${tagsHtml ? `<div class="exh-tags">${tagsHtml}</div>` : ''}
+      </div>
+      <div class="exh-right">
+        ${bestVisit ? `<div class="exh-rating">${'★'.repeat(bestVisit.rating)}${'☆'.repeat(5-bestVisit.rating)}</div>` : ''}
+        <div class="exh-actions">
+          <button class="icon-btn" data-eid="${e.id}" data-a="edit">編集</button>
+          <button class="icon-btn" data-eid="${e.id}" data-a="del">削除</button>
+        </div>
+      </div>
+    `;
+    row.addEventListener('click', ev => {
+      if (ev.target.closest('[data-a]')) return;
+      openExhDetail(e.id);
+    });
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-a]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (btn.dataset.a === 'edit') openExhModal(btn.dataset.eid);
+      if (btn.dataset.a === 'del') deleteExh(btn.dataset.eid);
+    });
+  });
+}
+
+document.getElementById('exhSearch').addEventListener('input', renderExhList);
+document.getElementById('exhVenueFilter').addEventListener('change', renderExhList);
+document.getElementById('exhStatusFilter').addEventListener('change', renderExhList);
+
+function refreshVenueFilter() {
+  const sel = document.getElementById('exhVenueFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">すべての会場</option>' +
+    venues.map(v => `<option value="${v.id}"${v.id===cur?' selected':''}>${esc(v.name)}</option>`).join('');
+}
+
+// ════════════════════════════════════════
+// EXHIBITION DETAIL
+// ════════════════════════════════════════
+function openExhDetail(id) {
+  currentExhId = id;
+  const e = exhs.find(x => x.id === id);
+  if (!e) return;
+  const venue = venues.find(v => v.id === e.venueId);
+
+  document.getElementById('edTitle').textContent = e.title;
+  document.getElementById('edVenueName').textContent = venue ? venue.name : '';
+
+  const period = [fmtDate(e.start), fmtDate(e.end)].filter(Boolean).join(' 〜 ');
+  document.getElementById('edMetaRow').innerHTML = `
+    ${period ? `<div class="detail-meta-item"><span class="detail-meta-label">期間</span><span class="detail-meta-val">${esc(period)}</span></div>` : ''}
+    ${e.ticket != null ? `<div class="detail-meta-item"><span class="detail-meta-label">一般料金</span><span class="detail-meta-val">${e.ticket === 0 ? '無料' : e.ticket.toLocaleString() + '円'}</span></div>` : ''}
+    ${e.url ? `<div class="detail-meta-item"><span class="detail-meta-label">公式URL</span><span class="detail-meta-val"><a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.url)}</a></span></div>` : ''}
+    ${(e.tags||[]).length ? `<div class="detail-meta-item"><span class="detail-meta-label">タグ</span><span class="detail-meta-val">${(e.tags||[]).map(t=>`<span class="tag" style="margin-right:0.5rem">${esc(t)}</span>`).join('')}</span></div>` : ''}
+  `;
+  document.getElementById('edDesc').textContent = e.desc || '';
+  document.getElementById('edNoteText').textContent = e.note || '';
+
+  renderVisitCards(id);
+  showView('exh-detail');
+}
+
+function renderVisitCards(exhId) {
+  const list = document.getElementById('edVisitList');
+  const vs = visits.filter(v => v.exhId === exhId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  if (!vs.length) {
+    list.innerHTML = '<p style="font-size:0.78rem;color:var(--muted);padding:0.8rem 0 0.5rem">まだ訪問記録がありません</p>';
+    return;
+  }
+  list.innerHTML = vs.map(v => `
+    <div class="visit-card">
+      <div class="visit-card-actions">
+        <button class="icon-btn" data-vid="${v.id}" data-a="editv">編集</button>
+        <button class="icon-btn" data-vid="${v.id}" data-a="delv">削除</button>
+      </div>
+      <div class="visit-card-date">${esc(v.date||'')}</div>
+      ${v.rating ? `<div class="visit-card-rating">${'★'.repeat(v.rating)}${'☆'.repeat(5-v.rating)}</div>` : ''}
+      ${v.note ? `<div class="visit-card-note">${esc(v.note)}</div>` : ''}
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-a]').forEach(btn => {
+    if (btn.dataset.a === 'editv') btn.addEventListener('click', () => openVisitModal(currentExhId, btn.dataset.vid));
+    if (btn.dataset.a === 'delv') btn.addEventListener('click', () => deleteVisit(btn.dataset.vid));
+  });
+}
+
+document.getElementById('exhDetailBack').addEventListener('click', () => {
+  showView('exhibitions');
+  renderExhList();
+});
+document.getElementById('edEditBtn').addEventListener('click', () => openExhModal(currentExhId));
+document.getElementById('edAddVisitBtn').addEventListener('click', () => openVisitModal(currentExhId));
+
+// ════════════════════════════════════════
+// MODAL HELPERS
+// ════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════
+// VENUE MODAL
+// ════════════════════════════════════════
+document.getElementById('openAddVenueBtn').addEventListener('click', () => openVenueModal());
+
+function openVenueModal(id) {
+  editingVenueId = id || null;
+  const v = id ? venues.find(x => x.id === id) : null;
+  document.getElementById('vModalTitle').textContent = v ? '会場を編集' : '会場を追加';
+  document.getElementById('vfName').value     = v?.name     || '';
+  document.getElementById('vfLocation').value = v?.location || '';
+  document.getElementById('vfUrl').value      = v?.url      || '';
+  document.getElementById('vfNote').value     = v?.note     || '';
+  openModal('venueOverlay');
+}
+
+document.getElementById('vSaveBtn').addEventListener('click', () => {
+  const name = document.getElementById('vfName').value.trim();
+  if (!name) { alert('会場名は必須です'); return; }
+  const data = {
+    id: editingVenueId || uid(),
+    name,
+    location: document.getElementById('vfLocation').value.trim(),
+    url: document.getElementById('vfUrl').value.trim(),
+    note: document.getElementById('vfNote').value.trim(),
+  };
+  if (editingVenueId) {
+    const i = venues.findIndex(v => v.id === editingVenueId);
+    if (i >= 0) venues[i] = data;
+  } else {
+    venues.push(data);
+  }
+  persist();
+  closeModal('venueOverlay');
+  refreshVenueFilter();
+  renderVenueGrid();
+  renderExhList();
+});
+
+// ════════════════════════════════════════
+// EXHIBITION MODAL
+// ════════════════════════════════════════
+document.getElementById('openAddExhBtn').addEventListener('click', () => openExhModal());
+
+function openExhModal(id, presetVenueId) {
+  editingExhId = id || null;
+  exhTags = [];
+  const e = id ? exhs.find(x => x.id === id) : null;
+  document.getElementById('eModalTitle').textContent = e ? '展覧会を編集' : '展覧会を追加';
+  document.getElementById('efTitle').value = e?.title || '';
+  document.getElementById('efUrl').value   = e?.url   || '';
+  document.getElementById('efStart').value = e?.start || '';
+  document.getElementById('efEnd').value   = e?.end   || '';
+  document.getElementById('efDesc').value  = e?.desc  || '';
+  document.getElementById('efNote').value  = e?.note  || '';
+  document.getElementById('efTicket').value = e?.ticket != null ? e.ticket : '';
+  document.getElementById('fetchStatus').textContent = '';
+
+  // venue selector
+  const sel = document.getElementById('efVenue');
+  sel.innerHTML = '<option value="">会場を選択…</option>' +
+    venues.map(v => `<option value="${v.id}">${esc(v.name)}</option>`).join('');
+  const targetVid = e?.venueId || presetVenueId || '';
+  sel.value = targetVid;
+
+  exhTags = [...(e?.tags || [])];
+  renderExhTagChips();
+  openModal('exhOverlay');
+}
+
+function renderExhTagChips() {
+  const field = document.getElementById('efTagsField');
+  const input = document.getElementById('efTagInput');
+  field.querySelectorAll('.chip').forEach(c => c.remove());
+  exhTags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `${esc(tag)}<button type="button">×</button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      exhTags = exhTags.filter(t => t !== tag);
+      renderExhTagChips();
+    });
+    field.insertBefore(chip, input);
+  });
+}
+
+document.getElementById('efTagInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const v = e.target.value.trim();
+    if (v && !exhTags.includes(v)) { exhTags.push(v); renderExhTagChips(); }
+    e.target.value = '';
+  }
+});
+
+document.getElementById('eSaveBtn').addEventListener('click', () => {
+  const title = document.getElementById('efTitle').value.trim();
+  const venueId = document.getElementById('efVenue').value;
+  if (!title || !venueId) { alert('展覧会名と会場は必須です'); return; }
+  const pending = document.getElementById('efTagInput').value.trim();
+  if (pending && !exhTags.includes(pending)) exhTags.push(pending);
+
+  const data = {
+    id: editingExhId || uid(),
+    title,
+    venueId,
+    url:   document.getElementById('efUrl').value.trim(),
+    start: document.getElementById('efStart').value,
+    end:   document.getElementById('efEnd').value,
+    desc:  document.getElementById('efDesc').value.trim(),
+    note:  document.getElementById('efNote').value.trim(),
+    tags:  [...exhTags],
+    ticket: document.getElementById('efTicket').value !== '' ? Number(document.getElementById('efTicket').value) : null,
+  };
+  if (editingExhId) {
+    const i = exhs.findIndex(e => e.id === editingExhId);
+    if (i >= 0) exhs[i] = data;
+  } else {
+    exhs.push(data);
+  }
+  persist();
+  closeModal('exhOverlay');
+  renderExhList();
+  if (document.getElementById('view-venue-detail').classList.contains('active')) {
+    renderVenueExhList(currentVenueId);
+  }
+  if (document.getElementById('view-exh-detail').classList.contains('active') && editingExhId === currentExhId) {
+    openExhDetail(currentExhId);
+  }
+});
+
+// ── SHARED HELPERS ──
+async function fetchPageText(url) {
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxyUrl);
+  if (!res.ok) throw new Error('プロキシエラー');
+  const json = await res.json();
+  return (json.contents || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .slice(0, 6000);
+}
+
+async function parseWithClaude(systemPrompt, userContent) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const raw = data.content?.find(b => b.type === 'text')?.text || '';
+  const m = raw.replace(/```json|```/g, '').match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('JSON解析失敗');
+  return JSON.parse(m[0]);
+}
+
+// ── EXHIBITION URL FETCH ──
+document.getElementById('fetchInfoBtn').addEventListener('click', async () => {
+  const url = document.getElementById('efUrl').value.trim();
+  if (!url) { alert('URLを入力してください'); return; }
+  const status = document.getElementById('fetchStatus');
+  status.style.color = 'var(--muted)';
+  status.textContent = '⏳ ページを取得中…';
+  try {
+    const pageText = await fetchPageText(url);
+    status.textContent = '⏳ 情報を解析中…';
+    const info = await parseWithClaude(
+      `あなたは美術展・アートイベントの情報を抽出する専門家です。
+与えられたページテキストから展覧会情報を抽出し、JSONのみを返してください。余分なテキスト・コードブロック記号は不要です。
+日付はYYYY-MM-DD形式。ticket_generalは一般当日料金を数値（円）で、無料なら0。不明な項目はnullにしてください。
+形式: {"title":"","venue_name":"","start":"YYYY-MM-DD","end":"YYYY-MM-DD","desc":"","ticket_general":null}`,
+      `以下のページテキストから展覧会情報を抽出してください:\n\n${pageText}`
+    );
+    if (info.title)          document.getElementById('efTitle').value  = info.title;
+    if (info.start)          document.getElementById('efStart').value  = info.start;
+    if (info.end)            document.getElementById('efEnd').value    = info.end;
+    if (info.desc)           document.getElementById('efDesc').value   = info.desc;
+    if (info.ticket_general != null) document.getElementById('efTicket').value = info.ticket_general;
+    if (info.venue_name) {
+      const matched = venues.find(v =>
+        v.name.includes(info.venue_name) || info.venue_name.includes(v.name)
+      );
+      if (matched) document.getElementById('efVenue').value = matched.id;
+    }
+    status.textContent = '✓ 情報を取得しました。確認して保存してください。';
+    status.style.color = 'var(--visited)';
+  } catch(err) {
+    status.textContent = `⚠ 取得エラー: ${err.message}`;
+    status.style.color = 'var(--accent)';
+  }
+});
+
+// ── VENUE AUTO-SEARCH ──
+document.getElementById('venueSearchBtn').addEventListener('click', async () => {
+  const name = document.getElementById('vfName').value.trim();
+  if (!name) { alert('会場名を入力してください'); return; }
+  const status = document.getElementById('vfFetchStatus');
+  status.style.color = 'var(--muted)';
+  status.textContent = '⏳ 検索中…';
+  try {
+    const info = await parseWithClaude(
+      `あなたは日本の美術館・ギャラリー情報の専門家です。
+与えられた施設名についてJSONのみを返してください。余分なテキストは不要です。
+確実な情報のみ入れ、不明な項目はnullにしてください（推測で埋めないこと）。
+形式: {"name":"正式名称","location":"住所（都道府県市区町村）","url":"公式URL","note":"開館時間・休館日など"}`,
+      `「${name}」の施設情報を教えてください。`
+    );
+    if (info.name)     document.getElementById('vfName').value     = info.name;
+    if (info.location) document.getElementById('vfLocation').value = info.location;
+    if (info.url)      document.getElementById('vfUrl').value      = info.url;
+    if (info.note)     document.getElementById('vfNote').value     = info.note;
+    status.textContent = '✓ 情報を取得しました。確認して保存してください。';
+    status.style.color = 'var(--visited)';
+  } catch(err) {
+    status.textContent = `⚠ 取得エラー: ${err.message}`;
+    status.style.color = 'var(--accent)';
+  }
+});
+
+// ════════════════════════════════════════
+// VISIT MODAL
+// ════════════════════════════════════════
+function openVisitModal(exhId, visitId) {
+  editingVisitId = visitId || null;
+  currentExhId = exhId;
+  visitRating = 0;
+  const v = visitId ? visits.find(x => x.id === visitId) : null;
+  document.getElementById('vvModalTitle').textContent = v ? '訪問記録を編集' : '訪問を記録';
+  document.getElementById('vvDate').value = v?.date || new Date().toISOString().split('T')[0];
+  document.getElementById('vvNote').value = v?.note || '';
+  setVisitStars(v?.rating || 0);
+  openModal('visitOverlay');
+}
+
+function setVisitStars(val) {
+  visitRating = val;
+  document.querySelectorAll('#vvStarsRow .star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.v) <= val);
+  });
+}
+document.getElementById('vvStarsRow').addEventListener('click', e => {
+  if (e.target.matches('.star')) setVisitStars(parseInt(e.target.dataset.v));
+});
+
+document.getElementById('vvSaveBtn').addEventListener('click', () => {
+  const date = document.getElementById('vvDate').value;
+  if (!date) { alert('訪問日は必須です'); return; }
+  const data = {
+    id: editingVisitId || uid(),
+    exhId: currentExhId,
+    date,
+    rating: visitRating,
+    note: document.getElementById('vvNote').value.trim(),
+  };
+  if (editingVisitId) {
+    const i = visits.findIndex(v => v.id === editingVisitId);
+    if (i >= 0) visits[i] = data;
+  } else {
+    visits.push(data);
+  }
+  persist();
+  closeModal('visitOverlay');
+  renderVisitCards(currentExhId);
+  renderExhList();
+});
+
+// ════════════════════════════════════════
+// DELETE
+// ════════════════════════════════════════
+function deleteVenue(id) {
+  if (!confirm('この会場と関連する展覧会・訪問記録もすべて削除されます。よろしいですか？')) return;
+  const exhIds = exhs.filter(e => e.venueId === id).map(e => e.id);
+  visits = visits.filter(v => !exhIds.includes(v.exhId));
+  exhs   = exhs.filter(e => e.venueId !== id);
+  venues = venues.filter(v => v.id !== id);
+  persist();
+  refreshVenueFilter();
+  renderVenueGrid();
+  renderExhList();
+}
+
+function deleteExh(id) {
+  if (!confirm('この展覧会と訪問記録を削除しますか？')) return;
+  visits = visits.filter(v => v.exhId !== id);
+  exhs   = exhs.filter(e => e.id !== id);
+  persist();
+  renderExhList();
+  if (document.getElementById('view-venue-detail').classList.contains('active')) {
+    renderVenueExhList(currentVenueId);
+  }
+}
+
+function deleteVisit(id) {
+  if (!confirm('この訪問記録を削除しますか？')) return;
+  visits = visits.filter(v => v.id !== id);
+  persist();
+  renderVisitCards(currentExhId);
+  renderExhList();
+}
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function fmtDate(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  return `${y}/${m}/${day}`;
+}
+
+// ════════════════════════════════════════
+// SEED DATA
+// ════════════════════════════════════════
+function seed() {
+  if (venues.length) return;
+  const v1 = uid(), v2 = uid();
+  const e1 = uid();
+  venues = [
+    { id: v1, name: '東京都現代美術館', location: '東京都江東区三好4-1-1', url: 'https://www.mot-art-museum.jp', note: '木休、9:30–17:30' },
+    { id: v2, name: 'Mito Arts Foundation', location: '茨城県水戸市五軒町1-6-8', url: 'https://arttowermito.or.jp', note: '' },
+  ];
+  exhs = [
+    { id: e1, venueId: v1, title: 'Volatility展', url: '', start: '2026-02-01', end: '2026-04-06', desc: '不安定性・揺らぎをテーマに、神経科学・哲学・アートが交差する展覧会。対称性の破れ、可能性の残余、解決されないことの価値を問う。', note: '中野信子氏のトークを聴講予定', tags: ['現代美術', 'インスタレーション', '神経科学'] },
+  ];
+  visits = [
+    { id: uid(), exhId: e1, date: '2026-03-15', rating: 5, note: '中野信子氏のトークが印象的。dunamis（潜勢力）の概念が浮かんだ。未決定であることの価値を再考した。' },
+  ];
+  persist();
+}
+
+// ════════════════════════════════════════
+// EXPORT / IMPORT / CLEAR
+// ════════════════════════════════════════
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const payload = JSON.stringify({ venues, exhs, visits, exportedAt: new Date().toISOString() }, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `artlog-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.venues || !data.exhs || !data.visits) throw new Error('形式が不正です');
+      if (!confirm(`インポートします。現在のデータは上書きされます。\n会場: ${data.venues.length}件 / 展覧会: ${data.exhs.length}件 / 訪問: ${data.visits.length}件`)) return;
+      venues = data.venues;
+      exhs   = data.exhs;
+      visits = data.visits;
+      persist();
+      refreshVenueFilter();
+      renderExhList();
+      renderVenueGrid();
+      alert('インポート完了しました。');
+    } catch(err) {
+      alert(`インポートエラー: ${err.message}`);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (!confirm('すべてのデータを削除します。この操作は元に戻せません。続けますか？')) return;
+  if (!confirm('本当に削除しますか？先にエクスポートしておくことをお勧めします。')) return;
+  venues = []; exhs = []; visits = [];
+  persist();
+  refreshVenueFilter();
+  renderExhList();
+  renderVenueGrid();
+});
+
+// ════════════════════════════════════════
+// PWA: SERVICE WORKER & INSTALL PROMPT
+// ════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('installBtn').style.display = 'block';
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('installBtn').style.display = 'none';
+  }
+  deferredInstallPrompt = null;
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').style.display = 'none';
+});
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+load();
+seed();
+refreshVenueFilter();
+renderExhList();
+</script>
+</body>
+</html>

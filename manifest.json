@@ -1,0 +1,25 @@
+{
+  "name": "ART LOG — 鑑賞記録",
+  "short_name": "ART LOG",
+  "description": "美術展・アートイベントの鑑賞記録アプリ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2ede3",
+  "theme_color": "#181512",
+  "orientation": "portrait-primary",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
